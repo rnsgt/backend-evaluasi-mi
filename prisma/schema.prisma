@@ -1,0 +1,163 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model dosen {
+  id             Int              @id @default(autoincrement())
+  nip            String           @unique @db.VarChar(30)
+  nama           String           @db.VarChar(100)
+  email          String?          @db.VarChar(100)
+  foto           String?          @db.VarChar(255)
+  created_at     DateTime?        @default(now()) @db.Timestamp(6)
+  updated_at     DateTime?        @default(now()) @db.Timestamp(6)
+  evaluasi_dosen evaluasi_dosen[]
+  mata_kuliah    mata_kuliah[]
+
+  @@index([nip], map: "idx_dosen_nip")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model evaluasi_detail {
+  id                      Int                   @id @default(autoincrement())
+  evaluasi_dosen_id       Int?
+  evaluasi_fasilitas_id   Int?
+  pernyataan_dosen_id     Int?
+  pernyataan_fasilitas_id Int?
+  nilai                   Int
+  created_at              DateTime?             @default(now()) @db.Timestamp(6)
+  evaluasi_dosen          evaluasi_dosen?       @relation(fields: [evaluasi_dosen_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  evaluasi_fasilitas      evaluasi_fasilitas?   @relation(fields: [evaluasi_fasilitas_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  pernyataan_dosen        pernyataan_dosen?     @relation(fields: [pernyataan_dosen_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  pernyataan_fasilitas    pernyataan_fasilitas? @relation(fields: [pernyataan_fasilitas_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model evaluasi_dosen {
+  id               Int               @id @default(autoincrement())
+  user_id          Int
+  dosen_id         Int
+  mata_kuliah_id   Int
+  periode_id       Int
+  komentar         String?
+  status           String?           @default("submitted") @db.VarChar(20)
+  submitted_at     DateTime?         @default(now()) @db.Timestamp(6)
+  created_at       DateTime?         @default(now()) @db.Timestamp(6)
+  evaluasi_detail  evaluasi_detail[]
+  dosen            dosen             @relation(fields: [dosen_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  mata_kuliah      mata_kuliah       @relation(fields: [mata_kuliah_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  periode_evaluasi periode_evaluasi  @relation(fields: [periode_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  users            users             @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([user_id, dosen_id, mata_kuliah_id, periode_id])
+  @@index([periode_id], map: "idx_evaluasi_dosen_periode")
+  @@index([user_id], map: "idx_evaluasi_dosen_user")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model evaluasi_fasilitas {
+  id               Int               @id @default(autoincrement())
+  user_id          Int
+  fasilitas_id     Int
+  periode_id       Int
+  komentar         String?
+  status           String?           @default("submitted") @db.VarChar(20)
+  submitted_at     DateTime?         @default(now()) @db.Timestamp(6)
+  created_at       DateTime?         @default(now()) @db.Timestamp(6)
+  evaluasi_detail  evaluasi_detail[]
+  fasilitas        fasilitas         @relation(fields: [fasilitas_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  periode_evaluasi periode_evaluasi  @relation(fields: [periode_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  users            users             @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([user_id, fasilitas_id, periode_id])
+  @@index([periode_id], map: "idx_evaluasi_fasilitas_periode")
+  @@index([user_id], map: "idx_evaluasi_fasilitas_user")
+}
+
+model fasilitas {
+  id                 Int                  @id @default(autoincrement())
+  kode               String               @unique @db.VarChar(20)
+  nama               String               @db.VarChar(100)
+  kategori           String               @db.VarChar(50)
+  lokasi             String?              @db.VarChar(100)
+  kapasitas          Int?
+  created_at         DateTime?            @default(now()) @db.Timestamp(6)
+  updated_at         DateTime?            @default(now()) @db.Timestamp(6)
+  evaluasi_fasilitas evaluasi_fasilitas[]
+}
+
+model mata_kuliah {
+  id             Int              @id @default(autoincrement())
+  kode           String           @unique @db.VarChar(20)
+  nama           String           @db.VarChar(100)
+  sks            Int
+  semester       Int?
+  dosen_id       Int?
+  created_at     DateTime?        @default(now()) @db.Timestamp(6)
+  updated_at     DateTime?        @default(now()) @db.Timestamp(6)
+  evaluasi_dosen evaluasi_dosen[]
+  dosen          dosen?           @relation(fields: [dosen_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([dosen_id], map: "idx_mata_kuliah_dosen")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model periode_evaluasi {
+  id                 Int                  @id @default(autoincrement())
+  nama               String               @db.VarChar(100)
+  tahun_ajaran       String               @db.VarChar(20)
+  semester           String               @db.VarChar(20)
+  tanggal_mulai      DateTime             @db.Date
+  tanggal_akhir      DateTime             @db.Date
+  batas_evaluasi     DateTime             @db.Date
+  status             String?              @default("tidak_aktif") @db.VarChar(20)
+  keterangan         String?
+  created_at         DateTime?            @default(now()) @db.Timestamp(6)
+  updated_at         DateTime?            @default(now()) @db.Timestamp(6)
+  evaluasi_dosen     evaluasi_dosen[]
+  evaluasi_fasilitas evaluasi_fasilitas[]
+
+  @@index([status], map: "idx_periode_status")
+}
+
+model pernyataan_dosen {
+  id              Int               @id @default(autoincrement())
+  kategori        String            @db.VarChar(50)
+  pernyataan      String
+  urutan          Int?
+  created_at      DateTime?         @default(now()) @db.Timestamp(6)
+  evaluasi_detail evaluasi_detail[]
+}
+
+model pernyataan_fasilitas {
+  id              Int               @id @default(autoincrement())
+  kategori        String            @db.VarChar(50)
+  pernyataan      String
+  urutan          Int?
+  created_at      DateTime?         @default(now()) @db.Timestamp(6)
+  evaluasi_detail evaluasi_detail[]
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model users {
+  id                 Int                  @id @default(autoincrement())
+  nim                String?              @unique @db.VarChar(20)
+  nama               String               @db.VarChar(100)
+  email              String               @unique @db.VarChar(100)
+  password           String               @db.VarChar(255)
+  role               String?              @default("mahasiswa") @db.VarChar(20)
+  prodi              String?              @db.VarChar(100)
+  angkatan           String?              @db.VarChar(10)
+  created_at         DateTime?            @default(now()) @db.Timestamp(6)
+  updated_at         DateTime?            @default(now()) @db.Timestamp(6)
+  evaluasi_dosen     evaluasi_dosen[]
+  evaluasi_fasilitas evaluasi_fasilitas[]
+
+  @@index([email], map: "idx_users_email")
+  @@index([nim], map: "idx_users_nim")
+  @@index([role], map: "idx_users_role")
+}
