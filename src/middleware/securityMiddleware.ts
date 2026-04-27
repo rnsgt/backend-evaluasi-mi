@@ -1,8 +1,8 @@
 import helmet from 'helmet';
-import rateLimit from 'express-rate-limit';
+import { rateLimit } from 'express-rate-limit';
 
 // Security Headers with Helmet
-const helmetMiddleware = helmet({
+const helmetMiddleware = (helmet as any)({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
@@ -19,7 +19,7 @@ const helmetMiddleware = helmet({
 });
 
 // General Rate Limiter
-const limiter = rateLimit({
+const limiter = (rateLimit as any)({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 100, // Max 100 requests per windowMs
   message: {
@@ -35,7 +35,7 @@ const limiter = rateLimit({
 });
 
 // Stricter Rate Limiter for Auth Endpoints
-const authLimiter = rateLimit({
+const authLimiter = (rateLimit as any)({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 5, // Max 5 login attempts per 15 minutes
   message: {
@@ -48,7 +48,7 @@ const authLimiter = rateLimit({
 });
 
 // Strict Rate Limiter for Registration
-const registrationLimiter = rateLimit({
+const registrationLimiter = (rateLimit as any)({
   windowMs: 60 * 60 * 1000, // 1 hour
   max: 3, // Max 3 registration attempts per hour
   message: {
