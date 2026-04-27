@@ -11,11 +11,19 @@ import { helmetMiddleware, limiter, authLimiter, registrationLimiter } from './m
 checkEnvVars();
 
 const app = express();
+
+// 🌐 Trust proxy (Required for Vercel/proxies to get real user IP for rate limiting)
+app.set('trust proxy', 1);
+
 const PORT = Number(process.env.PORT) || 3000;
 const HOST = String(process.env.HOST || '0.0.0.0');
 
 // Test database connection
-testConnection();
+try {
+  await testConnection();
+} catch (error) {
+  console.error('🔴 Failed to initialize database on startup:', error.message);
+}
 
 // 🔐 Security Middleware - Apply first
 app.use(helmetMiddleware);
@@ -49,7 +57,8 @@ app.get('/', (req, res) => {
     message: 'Evaluasi MI API Server',
     version: '1.0.0',
     status: 'running',
-    database: isDatabaseConnected() ? 'connected' : 'disconnected'
+    database: isDatabaseConnected() ? 'connected' : 'disconnected',
+    env: process.env.VERCEL ? 'production-vercel' : (process.env.NODE_ENV || 'development')
   });
 });
 
