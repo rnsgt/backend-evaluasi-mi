@@ -114,8 +114,8 @@ router.get('/dashboard', async (req, res) => {
       JOIN evaluasi_detail detail ON ef.id = detail.evaluasi_fasilitas_id
     `;
 
-    const overallFasilitasScore = overallFasilitasScoreResult.length > 0 && overallFasilitasScoreResult[0].rata_rata
-      ? parseFloat(overallFasilitasScoreResult[0].rata_rata)
+    const overallFasilitasScore = (overallFasilitasScoreResult as any).length > 0 && (overallFasilitasScoreResult as any)[0].rata_rata
+      ? parseFloat((overallFasilitasScoreResult as any)[0].rata_rata)
       : 0.0; // Default jika tidak ada evaluasi
 
     // Fasilitas yang perlu perbaikan (rating < 3.5)
@@ -136,7 +136,7 @@ router.get('/dashboard', async (req, res) => {
       LIMIT 5
     `;
 
-    const serializeDashboardRows = (rows) => rows.map((row) => ({
+    const serializeDashboardRows = (rows: any[]) => rows.map((row) => ({
       ...row,
       jumlah_evaluasi: row.jumlah_evaluasi !== undefined && row.jumlah_evaluasi !== null
         ? Number(row.jumlah_evaluasi)
@@ -158,12 +158,12 @@ router.get('/dashboard', async (req, res) => {
         partisipasi: {
           uniqueMahasiswa: uniqueMahasiswaCount,
           totalMahasiswa,
-          persentase: parseFloat(partisipasiPersen),
+          persentase: parseFloat(String(partisipasiPersen)),
           periodeId: activePeriodeId,
           periodeNama: activePeriodeNama
         },
-        topDosen: serializeDashboardRows(topDosenResult),
-        fasilitasPerluPerbaikan: serializeDashboardRows(fasilitasPerluPerbaikanResult),
+        topDosen: serializeDashboardRows(topDosenResult as any[]),
+        fasilitasPerluPerbaikan: serializeDashboardRows(fasilitasPerluPerbaikanResult as any[]),
         overallFasilitasScore: overallFasilitasScore
       }
     });
@@ -179,7 +179,7 @@ router.get('/dashboard', async (req, res) => {
 // Laporan evaluasi dengan filter
 router.get('/laporan', async (req, res) => {
   try {
-    const { periode_id, tipe } = req.query;
+    const { periode_id, tipe } = req.query as any;
     
     // Validate periode_id if provided
     const validPeriodeId = periode_id ? parseInt(periode_id) : null;
@@ -478,7 +478,7 @@ router.get('/daily-trend', async (req, res) => {
       endDate.setDate(startDate.getDate() + 6);
       endDate.setHours(23,59,59,999);
     } else {
-      const daysCount = Math.min(parseInt(days) || 30, 365); // Max 365 hari
+      const daysCount = Math.min(parseInt(days as any) || 30, 365); // Max 365 hari
       startDate = new Date(now.getTime() - daysCount * 24 * 60 * 60 * 1000);
       endDate = now;
     }
@@ -501,7 +501,7 @@ router.get('/daily-trend', async (req, res) => {
     `;
 
     // Transform data untuk chart
-    const chartData = dailyData.map(item => ({
+    const chartData = (dailyData as any[]).map(item => ({
       tanggal: new Date(item.tanggal).toISOString().split('T')[0],
       totalEvaluasi: Number(item.total_evaluasi) || 0,
       dosenEvaluasi: Number(item.evaluasi_dosen) || 0,

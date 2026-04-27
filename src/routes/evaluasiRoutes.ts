@@ -70,7 +70,7 @@ router.get('/pernyataan/fasilitas', authMiddleware, async (req, res) => {
 // Submit evaluasi dosen
 router.post('/dosen', authMiddleware, async (req, res) => {
   try {
-    const user_id = req.user.id;
+    const user_id = req.user?.id;
     const dosen_id = toInt(req.body.dosen_id);
     const mata_kuliah_id = toInt(req.body.mata_kuliah_id);
     const mata_kuliah_nama = req.body.mata_kuliah_nama ? String(req.body.mata_kuliah_nama).trim() : '';
@@ -195,7 +195,7 @@ router.post('/dosen', authMiddleware, async (req, res) => {
       return evaluasi;
     });
 
-    if (result?.error === 'MATA_KULIAH_TIDAK_VALID') {
+    if (result && 'error' in result && result.error === 'MATA_KULIAH_TIDAK_VALID') {
       return res.status(404).json({
         success: false,
         message: mata_kuliah_id
@@ -207,7 +207,7 @@ router.post('/dosen', authMiddleware, async (req, res) => {
     res.status(201).json({
       success: true,
       message: 'Evaluasi dosen berhasil disimpan',
-      data: { evaluasi_id: result.id }
+      data: { evaluasi_id: (result as any).id }
     });
   } catch (error) {
     console.error('Submit evaluasi dosen error:', error);
@@ -229,7 +229,7 @@ router.post('/dosen', authMiddleware, async (req, res) => {
 // Submit evaluasi fasilitas
 router.post('/fasilitas', authMiddleware, async (req, res) => {
   try {
-    const user_id = req.user.id;
+    const user_id = req.user?.id;
     const fasilitas_id = toInt(req.body.fasilitas_id);
     const periode_id = toInt(req.body.periode_id);
     const komentar = req.body.komentar ? String(req.body.komentar).trim() : null;
@@ -334,7 +334,7 @@ router.post('/fasilitas', authMiddleware, async (req, res) => {
 // Get riwayat evaluasi mahasiswa
 router.get('/riwayat', authMiddleware, async (req, res) => {
   try {
-    const user_id = req.user.id;
+    const user_id = req.user?.id;
 
     const [dosenEvaluations, fasilitasEvaluations] = await Promise.all([
       prisma.evaluasi_dosen.findMany({
@@ -387,7 +387,7 @@ router.get('/riwayat', authMiddleware, async (req, res) => {
     }));
 
     const allEvaluasi = [...dosenData, ...fasilitasData].sort(
-      (a, b) => new Date(b.submitted_at) - new Date(a.submitted_at)
+      (a: any, b: any) => new Date(b.submitted_at).getTime() - new Date(a.submitted_at).getTime()
     );
 
     res.json({ success: true, data: allEvaluasi });
@@ -403,7 +403,7 @@ router.get('/riwayat', authMiddleware, async (req, res) => {
 // Get statistik mahasiswa
 router.get('/statistik', authMiddleware, async (req, res) => {
   try {
-    const user_id = req.user.id;
+    const user_id = req.user?.id;
 
     const [dosenCount, fasilitasCount, activePeriode] = await Promise.all([
       prisma.evaluasi_dosen.count({ where: { user_id } }),

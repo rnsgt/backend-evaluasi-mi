@@ -90,7 +90,7 @@ router.put('/:id', authMiddleware, adminMiddleware, async (req, res) => {
     const { nama, tahun_ajaran, semester, tanggal_mulai, tanggal_akhir, batas_evaluasi, keterangan, status } = req.body;
 
     const periode = await prisma.periode_evaluasi.update({
-      where: { id: parseInt(id) },
+      where: { id: parseInt(id as any) },
       data: {
         ...(nama && { nama }),
         ...(tahun_ajaran && { tahun_ajaran }),
@@ -137,7 +137,7 @@ router.put('/:id/activate', authMiddleware, adminMiddleware, async (req, res) =>
 
       // Activate selected period
       const updated = await tx.periode_evaluasi.update({
-        where: { id: parseInt(id) },
+        where: { id: parseInt(id as any) },
         data: { status: 'aktif' }
       });
 
@@ -171,7 +171,7 @@ router.delete('/:id', authMiddleware, adminMiddleware, async (req, res) => {
 
     // Check if it's active
     const periode = await prisma.periode_evaluasi.findUnique({
-      where: { id: parseInt(id) }
+      where: { id: parseInt(id as any) }
     });
 
     if (!periode) {
@@ -189,7 +189,7 @@ router.delete('/:id', authMiddleware, adminMiddleware, async (req, res) => {
     }
 
     await prisma.periode_evaluasi.delete({
-      where: { id: parseInt(id) }
+      where: { id: parseInt(id as any) }
     });
 
     res.json({

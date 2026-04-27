@@ -1,6 +1,7 @@
+import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 
-const authMiddleware = (req, res, next) => {
+const authMiddleware = (req: Request, res: Response, next: NextFunction) => {
   try {
     // Get token from header
     const token = req.headers.authorization?.split(' ')[1]; // Bearer TOKEN
@@ -13,7 +14,8 @@ const authMiddleware = (req, res, next) => {
     }
 
     // Verify token
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const secret = process.env.JWT_SECRET || 'secret';
+    const decoded = jwt.verify(token, secret);
     req.user = decoded;
     next();
   } catch (error) {
@@ -24,8 +26,8 @@ const authMiddleware = (req, res, next) => {
   }
 };
 
-const adminMiddleware = (req, res, next) => {
-  if (req.user.role !== 'admin') {
+const adminMiddleware = (req: Request, res: Response, next: NextFunction) => {
+  if (req.user?.role !== 'admin') {
     return res.status(403).json({
       success: false,
       message: 'Akses ditolak. Hanya admin yang dapat mengakses.'

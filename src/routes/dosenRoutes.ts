@@ -71,7 +71,7 @@ router.get('/:id', authMiddleware, async (req, res) => {
     const { id } = req.params;
 
     const dosen = await prisma.dosen.findUnique({
-      where: { id: parseInt(id) },
+      where: { id: parseInt(id as any) },
       include: {
         mata_kuliah: {
           select: {
@@ -196,7 +196,7 @@ router.post('/', authMiddleware, adminMiddleware, async (req, res) => {
 router.put('/:id', authMiddleware, adminMiddleware, async (req, res) => {
   try {
     const { id } = req.params;
-    const dosenId = parseInt(id, 10);
+    const dosenId = parseInt(id as any, 10);
     const { nip, nama, email, mata_kuliah } = req.body;
 
     const existing = await prisma.dosen.findUnique({
@@ -280,7 +280,7 @@ router.delete('/:id', authMiddleware, adminMiddleware, async (req, res) => {
     const { id } = req.params;
 
     const dosen = await prisma.dosen.delete({
-      where: { id: parseInt(id) }
+      where: { id: parseInt(id as any) }
     });
 
     res.json({

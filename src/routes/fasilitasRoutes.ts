@@ -76,7 +76,7 @@ router.get('/:id', authMiddleware, async (req, res) => {
     const { id } = req.params;
 
     const fasilitas = await prisma.fasilitas.findUnique({
-      where: { id: parseInt(id) }
+      where: { id: parseInt(id as any) }
     });
 
     if (!fasilitas) {
@@ -106,7 +106,7 @@ router.put('/:id', authMiddleware, adminMiddleware, async (req, res) => {
     const { kode, nama, kategori, lokasi, kapasitas } = req.body;
 
     const fasilitas = await prisma.fasilitas.update({
-      where: { id: parseInt(id) },
+      where: { id: parseInt(id as any) },
       data: {
         ...(kode && { kode: String(kode).toUpperCase().trim() }),
         ...(nama && { nama: String(nama).trim() }),
@@ -151,7 +151,7 @@ router.delete('/:id', authMiddleware, adminMiddleware, async (req, res) => {
     const { id } = req.params;
 
     const fasilitas = await prisma.fasilitas.delete({
-      where: { id: parseInt(id) }
+      where: { id: parseInt(id as any) }
     });
 
     res.json({

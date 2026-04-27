@@ -68,8 +68,8 @@ router.post('/register', [
     // Generate token
     const token = jwt.sign(
       { id: user.id, email: user.email, role: user.role },
-      process.env.JWT_SECRET,
-      { expiresIn: process.env.JWT_EXPIRES_IN }
+      process.env.JWT_SECRET || 'secret',
+      { expiresIn: (process.env.JWT_EXPIRES_IN || '7d') as any }
     );
 
     res.status(201).json({
@@ -160,8 +160,8 @@ router.post('/login', [
     // Generate token
     const token = jwt.sign(
       { id: user.id, email: user.email, role: user.role },
-      process.env.JWT_SECRET,
-      { expiresIn: process.env.JWT_EXPIRES_IN }
+      process.env.JWT_SECRET || 'secret',
+      { expiresIn: (process.env.JWT_EXPIRES_IN || '7d') as any }
     );
 
     // Remove password from response
@@ -188,7 +188,7 @@ router.post('/login', [
 router.get('/profile', authMiddleware, async (req, res) => {
   try {
     const user = await prisma.users.findUnique({
-      where: { id: req.user.id },
+      where: { id: req.user?.id },
       select: {
         id: true,
         nim: true,
@@ -249,7 +249,7 @@ router.put('/change-password', [
 
     // Get current user
     const user = await prisma.users.findUnique({
-      where: { id: req.user.id }
+      where: { id: req.user?.id }
     });
 
     if (!user) {
@@ -273,7 +273,7 @@ router.put('/change-password', [
 
     // Update password
     await prisma.users.update({
-      where: { id: req.user.id },
+      where: { id: req.user?.id },
       data: {
         password: hashedPassword
       }
