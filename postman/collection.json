@@ -1,0 +1,306 @@
+{
+	"info": {
+		"_postman_id": "b96b7bae-7216-4593-92bb-a2a8c8b23aef",
+		"name": "Evaluasi MI API Complete",
+		"description": "Comprehensive Postman collection for Evaluasi MI Backend API covering all routes and database models.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "01. Authentication",
+			"item": [
+				{
+					"name": "Register Mahasiswa",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"nim\": \"2024001\",\n    \"nama\": \"Mahasiswa Test\",\n    \"email\": \"mahasiswa@test.com\",\n    \"password\": \"password123\",\n    \"prodi\": \"Teknologi Informasi\",\n    \"angkatan\": \"2024\"\n}",
+							"options": { "raw": { "language": "json" } }
+						},
+						"url": { "raw": "{{base_url}}/api/auth/register", "host": ["{{base_url}}"], "path": ["api", "auth", "register"] }
+					}
+				},
+				{
+					"name": "Login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"if (jsonData.success) {",
+									"    pm.environment.set(\"token\", jsonData.data.token);",
+									"    pm.test(\"Token saved\", function () { pm.expect(jsonData.data.token).to.be.a('string'); });",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"identifier\": \"2024001\",\n    \"password\": \"password123\"\n}",
+							"options": { "raw": { "language": "json" } }
+						},
+						"url": { "raw": "{{base_url}}/api/auth/login", "host": ["{{base_url}}"], "path": ["api", "auth", "login"] }
+					}
+				},
+				{
+					"name": "Get Profile",
+					"request": {
+						"method": "GET",
+						"header": [ { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" } ],
+						"url": { "raw": "{{base_url}}/api/auth/profile", "host": ["{{base_url}}"], "path": ["api", "auth", "profile"] }
+					}
+				},
+				{
+					"name": "Change Password",
+					"request": {
+						"method": "PUT",
+						"header": [ { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" } ],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"oldPassword\": \"password123\",\n    \"newPassword\": \"newpassword123\",\n    \"newPasswordConfirmation\": \"newpassword123\"\n}",
+							"options": { "raw": { "language": "json" } }
+						},
+						"url": { "raw": "{{base_url}}/api/auth/change-password", "host": ["{{base_url}}"], "path": ["api", "auth", "change-password"] }
+					}
+				},
+				{
+					"name": "Forgot Password (Check User)",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"identifier\": \"2024001\"\n}",
+							"options": { "raw": { "language": "json" } }
+						},
+						"url": { "raw": "{{base_url}}/api/auth/forgot-password", "host": ["{{base_url}}"], "path": ["api", "auth", "forgot-password"] }
+					}
+				},
+				{
+					"name": "Reset Password",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"identifier\": \"2024001\",\n    \"newPassword\": \"password123\"\n}",
+							"options": { "raw": { "language": "json" } }
+						},
+						"url": { "raw": "{{base_url}}/api/auth/reset-password", "host": ["{{base_url}}"], "path": ["api", "auth", "reset-password"] }
+					}
+				}
+			]
+		},
+		{
+			"name": "02. Admin Dashboard & Reports",
+			"item": [
+				{
+					"name": "Admin Dashboard Stats",
+					"request": {
+						"method": "GET",
+						"header": [ { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" } ],
+						"url": { "raw": "{{base_url}}/api/admin/dashboard", "host": ["{{base_url}}"], "path": ["api", "admin", "dashboard"] }
+					}
+				},
+				{
+					"name": "Get Reports",
+					"request": {
+						"method": "GET",
+						"header": [ { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" } ],
+						"url": { "raw": "{{base_url}}/api/admin/laporan?tipe=semua", "host": ["{{base_url}}"], "path": ["api", "admin", "laporan"], "query": [{ "key": "tipe", "value": "semua" }] }
+					}
+				},
+				{
+					"name": "Daily Trend",
+					"request": {
+						"method": "GET",
+						"header": [ { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" } ],
+						"url": { "raw": "{{base_url}}/api/admin/daily-trend?days=7", "host": ["{{base_url}}"], "path": ["api", "admin", "daily-trend"], "query": [{ "key": "days", "value": "7" }] }
+					}
+				}
+			]
+		},
+		{
+			"name": "03. Dosen (Lecturer) Management",
+			"item": [
+				{
+					"name": "Get All Dosen",
+					"request": {
+						"method": "GET",
+						"header": [ { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" } ],
+						"url": { "raw": "{{base_url}}/api/dosen", "host": ["{{base_url}}"], "path": ["api", "dosen"] }
+					}
+				},
+				{
+					"name": "Create Dosen (Admin)",
+					"request": {
+						"method": "POST",
+						"header": [ { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" } ],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"nip\": \"19850101202401\",\n    \"nama\": \"Dosen Baru, S.Kom.\",\n    \"email\": \"dosenbaru@evaluasi.com\",\n    \"mata_kuliah\": [\"Algoritma\", \"Basis Data\"]\n}",
+							"options": { "raw": { "language": "json" } }
+						},
+						"url": { "raw": "{{base_url}}/api/dosen", "host": ["{{base_url}}"], "path": ["api", "dosen"] }
+					}
+				},
+				{
+					"name": "Update Dosen (Admin)",
+					"request": {
+						"method": "PUT",
+						"header": [ { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" } ],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"nama\": \"Dosen Update, M.Kom.\",\n    \"mata_kuliah\": [\"Struktur Data\"]\n}",
+							"options": { "raw": { "language": "json" } }
+						},
+						"url": { "raw": "{{base_url}}/api/dosen/1", "host": ["{{base_url}}"], "path": ["api", "dosen", "1"] }
+					}
+				},
+				{
+					"name": "Delete Dosen (Admin)",
+					"request": {
+						"method": "DELETE",
+						"header": [ { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" } ],
+						"url": { "raw": "{{base_url}}/api/dosen/1", "host": ["{{base_url}}"], "path": ["api", "dosen", "1"] }
+					}
+				}
+			]
+		},
+		{
+			"name": "04. Fasilitas (Facilities) Management",
+			"item": [
+				{
+					"name": "Get All Fasilitas",
+					"request": {
+						"method": "GET",
+						"header": [ { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" } ],
+						"url": { "raw": "{{base_url}}/api/fasilitas", "host": ["{{base_url}}"], "path": ["api", "fasilitas"] }
+					}
+				},
+				{
+					"name": "Create Fasilitas (Admin)",
+					"request": {
+						"method": "POST",
+						"header": [ { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" } ],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"kode\": \"LAB-01\",\n    \"nama\": \"Laboratorium Komputer 1\",\n    \"kategori\": \"Laboratorium\",\n    \"lokasi\": \"Gedung A Lantai 2\",\n    \"kapasitas\": 40\n}",
+							"options": { "raw": { "language": "json" } }
+						},
+						"url": { "raw": "{{base_url}}/api/fasilitas", "host": ["{{base_url}}"], "path": ["api", "fasilitas"] }
+					}
+				},
+				{
+					"name": "Delete Fasilitas (Admin)",
+					"request": {
+						"method": "DELETE",
+						"header": [ { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" } ],
+						"url": { "raw": "{{base_url}}/api/fasilitas/1", "host": ["{{base_url}}"], "path": ["api", "fasilitas", "1"] }
+					}
+				}
+			]
+		},
+		{
+			"name": "05. Periode Evaluasi Management",
+			"item": [
+				{
+					"name": "Get Active Periode",
+					"request": {
+						"method": "GET",
+						"header": [ { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" } ],
+						"url": { "raw": "{{base_url}}/api/periode/active", "host": ["{{base_url}}"], "path": ["api", "periode", "active"] }
+					}
+				},
+				{
+					"name": "Activate Periode (Admin)",
+					"request": {
+						"method": "PUT",
+						"header": [ { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" } ],
+						"url": { "raw": "{{base_url}}/api/periode/1/activate", "host": ["{{base_url}}"], "path": ["api", "periode", "1", "activate"] }
+					}
+				}
+			]
+		},
+		{
+			"name": "06. Pernyataan (Statements)",
+			"item": [
+				{
+					"name": "Get Pernyataan Dosen (Public)",
+					"request": {
+						"method": "GET",
+						"header": [ { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" } ],
+						"url": { "raw": "{{base_url}}/api/evaluasi/pernyataan/dosen", "host": ["{{base_url}}"], "path": ["api", "evaluasi", "pernyataan", "dosen"] }
+					}
+				},
+				{
+					"name": "Add Pernyataan Dosen (Admin)",
+					"request": {
+						"method": "POST",
+						"header": [ { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" } ],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"kategori\": \"Pedagogik\",\n    \"pernyataan\": \"Dosen menjelaskan materi dengan jelas\",\n    \"urutan\": 1\n}",
+							"options": { "raw": { "language": "json" } }
+						},
+						"url": { "raw": "{{base_url}}/api/admin/pernyataan/dosen", "host": ["{{base_url}}"], "path": ["api", "admin", "pernyataan", "dosen"] }
+					}
+				}
+			]
+		},
+		{
+			"name": "07. Evaluasi (Submit & Statistics)",
+			"item": [
+				{
+					"name": "Submit Evaluasi Dosen",
+					"request": {
+						"method": "POST",
+						"header": [ { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" } ],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"dosen_id\": 1,\n    \"periode_id\": 1,\n    \"mata_kuliah_id\": 1,\n    \"komentar\": \"Sangat memuaskan\",\n    \"jawaban\": [\n        { \"pernyataan_id\": 1, \"nilai\": 5 },\n        { \"pernyataan_id\": 2, \"nilai\": 4 }\n    ]\n}",
+							"options": { "raw": { "language": "json" } }
+						},
+						"url": { "raw": "{{base_url}}/api/evaluasi/dosen", "host": ["{{base_url}}"], "path": ["api", "evaluasi", "dosen"] }
+					}
+				},
+				{
+					"name": "Get Riwayat",
+					"request": {
+						"method": "GET",
+						"header": [ { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" } ],
+						"url": { "raw": "{{base_url}}/api/evaluasi/riwayat", "host": ["{{base_url}}"], "path": ["api", "evaluasi", "riwayat"] }
+					}
+				},
+				{
+					"name": "Get Statistik User",
+					"request": {
+						"method": "GET",
+						"header": [ { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" } ],
+						"url": { "raw": "{{base_url}}/api/evaluasi/statistik", "host": ["{{base_url}}"], "path": ["api", "evaluasi", "statistik"] }
+					}
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "test",
+			"script": {
+				"exec": [
+					"pm.test(\"Response status 2xx\", function () { pm.expect(pm.response.code).to.be.oneOf([200, 201]); });",
+					"pm.test(\"Response time < 500ms\", function () { pm.expect(pm.response.responseTime).to.be.below(500); });"
+				],
+				"type": "text/javascript"
+			}
+		}
+	]
+}

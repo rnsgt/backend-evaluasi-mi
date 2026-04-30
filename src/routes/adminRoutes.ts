@@ -146,6 +146,12 @@ router.get('/dashboard', async (req, res) => {
         : null
     }));
 
+    // Total Dosen & Fasilitas
+    const [totalDosen, totalFasilitas] = await Promise.all([
+      prisma.dosen.count(),
+      prisma.fasilitas.count()
+    ]);
+
     res.json({
       success: true,
       data: {
@@ -153,6 +159,9 @@ router.get('/dashboard', async (req, res) => {
         evaluasiMingguIni: Number(weekResult[0].total),
         evaluasiBulanIni: Number(monthResult[0].total),
         totalEvaluasi: Number(totalResult[0].total),
+        totalDosen,
+        totalFasilitas,
+        totalMahasiswa,
         evaluasiDosen: evaluasiDosenCount,
         evaluasiFasilitas: evaluasiFasilitasCount,
         partisipasi: {
@@ -562,6 +571,104 @@ router.get('/daily-trend', async (req, res) => {
       message: 'Terjadi kesalahan pada server',
       error: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
+  }
+});
+
+// Get statements (Dosen)
+router.get('/pernyataan/dosen', async (req, res) => {
+  try {
+    const data = await prisma.pernyataan_dosen.findMany({ orderBy: { urutan: 'asc' } });
+    res.json({ success: true, data });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Gagal mengambil data' });
+  }
+});
+
+// Add statement (Dosen)
+router.post('/pernyataan/dosen', async (req, res) => {
+  try {
+    const { kategori, pernyataan, urutan } = req.body;
+    const data = await prisma.pernyataan_dosen.create({
+      data: { kategori, pernyataan, urutan: parseInt(urutan) || 0 }
+    });
+    res.json({ success: true, message: 'Pertanyaan berhasil ditambahkan', data });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Gagal menambahkan data' });
+  }
+});
+
+// Update statement (Dosen)
+router.put('/pernyataan/dosen/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { kategori, pernyataan, urutan } = req.body;
+    const data = await prisma.pernyataan_dosen.update({
+      where: { id: parseInt(id) },
+      data: { kategori, pernyataan, urutan: parseInt(urutan) }
+    });
+    res.json({ success: true, message: 'Pertanyaan berhasil diperbarui', data });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Gagal memperbarui data' });
+  }
+});
+
+// Delete statement (Dosen)
+router.delete('/pernyataan/dosen/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    await prisma.pernyataan_dosen.delete({ where: { id: parseInt(id) } });
+    res.json({ success: true, message: 'Pertanyaan berhasil dihapus' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Gagal menghapus data' });
+  }
+});
+
+// Get statements (Fasilitas)
+router.get('/pernyataan/fasilitas', async (req, res) => {
+  try {
+    const data = await prisma.pernyataan_fasilitas.findMany({ orderBy: { urutan: 'asc' } });
+    res.json({ success: true, data });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Gagal mengambil data' });
+  }
+});
+
+// Add statement (Fasilitas)
+router.post('/pernyataan/fasilitas', async (req, res) => {
+  try {
+    const { kategori, pernyataan, urutan } = req.body;
+    const data = await prisma.pernyataan_fasilitas.create({
+      data: { kategori, pernyataan, urutan: parseInt(urutan) || 0 }
+    });
+    res.json({ success: true, message: 'Pertanyaan berhasil ditambahkan', data });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Gagal menambahkan data' });
+  }
+});
+
+// Update statement (Fasilitas)
+router.put('/pernyataan/fasilitas/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { kategori, pernyataan, urutan } = req.body;
+    const data = await prisma.pernyataan_fasilitas.update({
+      where: { id: parseInt(id) },
+      data: { kategori, pernyataan, urutan: parseInt(urutan) }
+    });
+    res.json({ success: true, message: 'Pertanyaan berhasil diperbarui', data });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Gagal memperbarui data' });
+  }
+});
+
+// Delete statement (Fasilitas)
+router.delete('/pernyataan/fasilitas/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    await prisma.pernyataan_fasilitas.delete({ where: { id: parseInt(id) } });
+    res.json({ success: true, message: 'Pertanyaan berhasil dihapus' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Gagal menghapus data' });
   }
 });
 

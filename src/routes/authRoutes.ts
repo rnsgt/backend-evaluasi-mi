@@ -292,4 +292,89 @@ router.put('/change-password', [
   }
 });
 
+// Forgot Password - Check User
+router.post('/forgot-password', [
+  body('identifier').notEmpty().withMessage('NIM atau Email harus diisi'),
+], async (req, res) => {
+  try {
+    const rawIdentifier = req.body.identifier;
+    const identifier = String(rawIdentifier || '').trim();
+
+    const user = await prisma.users.findFirst({
+      where: {
+        OR: [
+          { email: { equals: identifier.toLowerCase(), mode: 'insensitive' } },
+          { nim: { equals: identifier, mode: 'insensitive' } }
+        ]
+      }
+    });
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'Pengguna dengan NIM/Email tersebut tidak ditemukan'
+      });
+    }
+
+    res.json({
+      success: true,
+      message: 'Pengguna ditemukan',
+      data: {
+        nama: user.nama,
+        email: user.email
+      }
+    });
+  } catch (error) {
+    console.error('Forgot password error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Terjadi kesalahan pada server'
+    });
+  }
+});
+
+// Reset Password
+router.post('/reset-password', [
+  body('identifier').notEmpty().withMessage('NIM atau Email harus diisi'),
+  body('newPassword').isLength({ min: 6 }).withMessage('Password baru minimal 6 karakter'),
+], async (req, res) => {
+  try {
+    const { newPassword } = req.body;
+    const identifier = String(req.body.identifier || '').trim();
+    const user = await prisma.users.findFirst({
+      where: {
+        OR: [
+          { email: { equals: identifier.toLowerCase(), mode: 'insensitive' } },
+          { nim: { equals: identifier, mode: 'insensitive' } }
+        ]
+      }
+    });
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'Gagal mereset password. Pengguna tidak ditemukan.'
+      });
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    await prisma.users.update({
+      where: { id: user.id },
+      data: { password: hashedPassword }
+    });
+
+    res.json({
+      success: true,
+      message: 'Password berhasil diperbarui. Silakan login kembali.'
+    });
+  } catch (error) {
+    console.error('Reset password error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Terjadi kesalahan pada server'
+    });
+  }
+});
+
 export default router;

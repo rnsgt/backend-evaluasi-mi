@@ -1,0 +1,17 @@
+{
+	"id": "e4b4f3b0-6d4a-4e8c-8d1e-8e8e8e8e8e8e",
+	"name": "Evaluasi MI Local",
+	"values": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:3000",
+			"enabled": true
+		},
+		{
+			"key": "token",
+			"value": "",
+			"enabled": true
+		}
+	],
+	"_postman_variable_scope": "environment"
+}

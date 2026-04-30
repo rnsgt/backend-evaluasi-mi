@@ -73,15 +73,15 @@ router.post('/dosen', authMiddleware, async (req, res) => {
     const user_id = req.user?.id;
     const dosen_id = toInt(req.body.dosen_id);
     const mata_kuliah_id = toInt(req.body.mata_kuliah_id);
-    const mata_kuliah_nama = req.body.mata_kuliah_nama ? String(req.body.mata_kuliah_nama).trim() : '';
+    const mata_kuliah_nama = req.body.mata_kuliah_nama ? String(req.body.mata_kuliah_nama).trim() : 'Umum';
     const periode_id = toInt(req.body.periode_id);
     const komentar = req.body.komentar ? String(req.body.komentar).trim() : null;
     const jawaban = req.body.jawaban;
 
-    if (!dosen_id || !periode_id || (!mata_kuliah_id && !mata_kuliah_nama)) {
+    if (!dosen_id || !periode_id) {
       return res.status(400).json({
         success: false,
-        message: 'dosen_id, mata_kuliah, dan periode_id wajib diisi'
+        message: 'dosen_id dan periode_id wajib diisi'
       });
     }
 
@@ -126,12 +126,12 @@ router.post('/dosen', authMiddleware, async (req, res) => {
         });
       }
 
-      if (!resolvedMataKuliah && mata_kuliah_nama) {
+      if (!resolvedMataKuliah) {
         resolvedMataKuliah = await tx.mata_kuliah.findFirst({
           where: {
             dosen_id,
             nama: {
-              equals: mata_kuliah_nama,
+              equals: mata_kuliah_nama || 'Umum',
               mode: 'insensitive'
             }
           },
@@ -139,12 +139,13 @@ router.post('/dosen', authMiddleware, async (req, res) => {
         });
       }
 
-      if (!resolvedMataKuliah && mata_kuliah_nama) {
+      // If still not found, create a default 'Umum' course for this lecturer
+      if (!resolvedMataKuliah) {
         resolvedMataKuliah = await tx.mata_kuliah.create({
           data: {
-            kode: `MK-${dosen_id}-${Date.now()}`,
-            nama: mata_kuliah_nama,
-            sks: 3,
+            kode: `UMUM-${dosen_id}`,
+            nama: mata_kuliah_nama || 'Umum',
+            sks: 0,
             semester: null,
             dosen_id,
           },
@@ -405,15 +406,23 @@ router.get('/statistik', authMiddleware, async (req, res) => {
   try {
     const user_id = req.user?.id;
 
-    const [dosenCount, fasilitasCount, activePeriode] = await Promise.all([
+    const [dosenCount, fasilitasCount, totalAllDosen, totalAllFasilitas, activePeriode] = await Promise.all([
       prisma.evaluasi_dosen.count({ where: { user_id } }),
       prisma.evaluasi_fasilitas.count({ where: { user_id } }),
-      prisma.periode_evaluasi.findFirst({ where: { status: 'aktif' }, select: { nama: true } })
+      prisma.dosen.count(),
+      prisma.fasilitas.count(),
+      prisma.periode_evaluasi.findFirst({ where: { status: 'aktif' }, select: { id: true, nama: true } })
     ]);
 
     const totalDosen = dosenCount;
     const totalFasilitas = fasilitasCount;
     const totalEvaluasi = totalDosen + totalFasilitas;
+
+    // Participation percentage for current period (approximate if no mapping)
+    const participationData = [
+      { label: 'Dosen', completed: totalDosen, total: totalAllDosen },
+      { label: 'Fasilitas', completed: totalFasilitas, total: totalAllFasilitas }
+    ];
 
     let achievement = null;
     if (totalEvaluasi >= 10) {
@@ -430,6 +439,7 @@ router.get('/statistik', authMiddleware, async (req, res) => {
         totalEvaluasi,
         totalDosen,
         totalFasilitas,
+        participationData,
         periodeAktif: activePeriode?.nama || 'Tidak ada periode aktif',
         achievement
       }
