@@ -20,7 +20,6 @@ CREATE TABLE IF NOT EXISTS "dosen" (
     "nip" VARCHAR(30) NOT NULL,
     "nama" VARCHAR(100) NOT NULL,
     "email" VARCHAR(100),
-    "foto" VARCHAR(255),
     "created_at" TIMESTAMP(6) DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(6) DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT "dosen_nip_key" UNIQUE ("nip")
@@ -58,7 +57,6 @@ CREATE TABLE IF NOT EXISTS "mata_kuliah" (
     "id" SERIAL NOT NULL PRIMARY KEY,
     "kode" VARCHAR(20) NOT NULL,
     "nama" VARCHAR(100) NOT NULL,
-    "sks" INTEGER NOT NULL,
     "semester" INTEGER,
     "dosen_id" INTEGER NOT NULL,
     "created_at" TIMESTAMP(6) DEFAULT CURRENT_TIMESTAMP,

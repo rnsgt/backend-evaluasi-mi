@@ -12,7 +12,6 @@ model dosen {
   nip            String           @unique @db.VarChar(30)
   nama           String           @db.VarChar(100)
   email          String?          @db.VarChar(100)
-  foto           String?          @db.VarChar(255)
   created_at     DateTime?        @default(now()) @db.Timestamp(6)
   updated_at     DateTime?        @default(now()) @db.Timestamp(6)
   evaluasi_dosen evaluasi_dosen[]
@@ -94,7 +93,6 @@ model mata_kuliah {
   id             Int              @id @default(autoincrement())
   kode           String           @unique @db.VarChar(20)
   nama           String           @db.VarChar(100)
-  sks            Int
   semester       Int?
   dosen_id       Int?
   created_at     DateTime?        @default(now()) @db.Timestamp(6)
