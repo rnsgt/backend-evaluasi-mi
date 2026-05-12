@@ -1,7 +1,27 @@
+import 'dotenv/config';
 import { PrismaClient } from '@prisma/client';
+import { PrismaPg } from '@prisma/adapter-pg';
+import { Pool } from 'pg';
 
-// Instantiate Prisma Client
-const prisma = new PrismaClient();
+// Instantiate Prisma Client with Driver Adapter for Prisma 7
+let connectionString = process.env.DATABASE_URL;
+if (connectionString) {
+  const url = new URL(connectionString);
+  url.searchParams.delete('sslmode');
+  connectionString = url.toString();
+}
+
+const pool = new Pool({ 
+  connectionString,
+  ssl: {
+    rejectUnauthorized: false
+  }
+});
+
+const adapter = new PrismaPg(pool);
+// Note: If you see a TypeScript error on 'adapter', please Restart TypeScript Server in VS Code
+// (Ctrl+Shift+P -> TypeScript: Restart TS Server)
+const prisma = new PrismaClient({ adapter } as any);
 
 let dbConnected = false;
 
@@ -24,7 +44,8 @@ const testConnection = async () => {
     }
   } catch (error) {
     dbConnected = false;
-    console.error('❌ Database connection failed:', error.message);
+    console.error('❌ Database connection failed:');
+    console.error(error);
     
     // Provide diagnostic info for Vercel
     if (process.env.VERCEL) {
