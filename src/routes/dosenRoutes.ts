@@ -1,5 +1,6 @@
 import express from 'express';
 const router = express.Router();
+// Last sync: 2026-05-13 03:06
 import { prisma } from '../config/database.js';
 import { authMiddleware, adminMiddleware } from '../middleware/authMiddleware.js';
 
@@ -9,7 +10,13 @@ const normalizeMataKuliahInput = (mataKuliah) => {
   }
 
   return mataKuliah
-    .map((item) => String(typeof item === 'object' ? (item.nama || item.kode || '') : item).trim())
+    .filter(item => item !== null && item !== undefined)
+    .map((item) => {
+      if (typeof item === 'object') {
+        return String(item.nama || item.kode || '').trim();
+      }
+      return String(item).trim();
+    })
     .filter(Boolean);
 };
 
@@ -18,15 +25,12 @@ const buildDosenPayload = (dosen) => ({
   nip: dosen.nip,
   nama: dosen.nama,
   email: dosen.email,
-  foto: dosen.foto,
   status: 'aktif',
   bio: '',
   mata_kuliah: (dosen.mata_kuliah || []).map((mk) => ({
     id: mk.id,
     kode: mk.kode,
     nama: mk.nama,
-    sks: mk.sks,
-    semester: mk.semester,
   })),
   created_at: dosen.created_at,
   updated_at: dosen.updated_at,
@@ -42,8 +46,6 @@ router.get('/', authMiddleware, async (req, res) => {
             id: true,
             kode: true,
             nama: true,
-            sks: true,
-            semester: true
           }
         }
       },
@@ -78,8 +80,6 @@ router.get('/:id', authMiddleware, async (req, res) => {
             id: true,
             kode: true,
             nama: true,
-            sks: true,
-            semester: true
           }
         }
       }
@@ -145,15 +145,15 @@ router.post('/', authMiddleware, adminMiddleware, async (req, res) => {
       });
 
       if (mataKuliahList.length > 0) {
-        await tx.mata_kuliah.createMany({
-          data: mataKuliahList.map((mk, index) => ({
-            kode: `MK-${dosen.id}-${index + 1}`,
-            nama: mk,
-            sks: 3,
-            semester: 1,
-            dosen_id: dosen.id,
-          }))
-        });
+        for (const [index, mk] of mataKuliahList.entries()) {
+          await tx.mata_kuliah.create({
+            data: {
+              kode: `MK${dosen.id}${Math.random().toString(36).substring(2, 7).toUpperCase()}`,
+              nama: mk,
+              dosen_id: dosen.id,
+            }
+          });
+        }
       }
 
       return tx.dosen.findUnique({
@@ -163,9 +163,7 @@ router.post('/', authMiddleware, adminMiddleware, async (req, res) => {
             select: {
               id: true,
               kode: true,
-              nama: true,
-              sks: true,
-              semester: true
+              nama: true
             }
           }
         }
@@ -213,6 +211,7 @@ router.put('/:id', authMiddleware, adminMiddleware, async (req, res) => {
     const mataKuliahList = normalizeMataKuliahInput(mata_kuliah);
 
     const updated = await prisma.$transaction(async (tx) => {
+      console.log('UPDATING DOSEN:', dosenId);
       await tx.dosen.update({
         where: { id: dosenId },
         data: {
@@ -222,33 +221,35 @@ router.put('/:id', authMiddleware, adminMiddleware, async (req, res) => {
         }
       });
 
-      await tx.mata_kuliah.deleteMany({
-        where: { dosen_id: dosenId }
-      });
-
-      if (mataKuliahList.length > 0) {
-        await tx.mata_kuliah.createMany({
-          data: mataKuliahList.map((mk, index) => ({
-            kode: `MK-${dosenId}-${index + 1}`,
-            nama: mk,
-            sks: 3,
-            semester: 1,
-            dosen_id: dosenId,
-          }))
+      console.log('UPDATING MK LIST:', mataKuliahList);
+      // Optional: If we want to preserve evaluations, we should only delete MKs that are not used.
+      // But for now, we follow the current logic but with better error handling.
+      try {
+        await tx.mata_kuliah.deleteMany({
+          where: { dosen_id: dosenId }
         });
+
+        if (mataKuliahList.length > 0) {
+          for (const [index, mk] of mataKuliahList.entries()) {
+            await tx.mata_kuliah.create({
+              data: {
+                kode: `MK${dosenId}${Math.random().toString(36).substring(2, 7).toUpperCase()}`, // Even shorter unique code
+                nama: mk,
+                dosen_id: dosenId,
+              }
+            });
+          }
+        }
+      } catch (mkError) {
+        console.error('Mata Kuliah update error inside transaction:', mkError);
+        throw mkError;
       }
 
       return tx.dosen.findUnique({
         where: { id: dosenId },
         include: {
           mata_kuliah: {
-            select: {
-              id: true,
-              kode: true,
-              nama: true,
-              sks: true,
-              semester: true
-            }
+            select: { id: true, kode: true, nama: true }
           }
         }
       });
@@ -264,12 +265,12 @@ router.put('/:id', authMiddleware, adminMiddleware, async (req, res) => {
     if (error.code === 'P2002') {
       return res.status(409).json({
         success: false,
-        message: 'NIP atau email dosen sudah digunakan'
+        message: 'NIP, email, atau kode mata kuliah sudah digunakan'
       });
     }
     res.status(500).json({
       success: false,
-      message: 'Terjadi kesalahan pada server'
+      message: `Terjadi kesalahan pada server: ${error.message || 'Internal Server Error'}`
     });
   }
 });
