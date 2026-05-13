@@ -1,9 +1,21 @@
 {
-  "buildCommand": "npm run build",
-  "installCommand": "npm ci --include=dev",
-  "outputDirectory": "dist",
-  "nodejs": "22.x",
-  "env": {
-    "NODE_ENV": "production"
-  }
+  "version": 2,
+  "builds": [
+    {
+      "src": "src/index.ts",
+      "use": "@vercel/node",
+      "config": {
+        "includeFiles": [
+          "prisma/schema.prisma",
+          "prisma.config.ts"
+        ]
+      }
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "src/index.ts"
+    }
+  ]
 }
