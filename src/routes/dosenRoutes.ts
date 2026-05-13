@@ -24,7 +24,6 @@ const buildDosenPayload = (dosen) => ({
   id: dosen.id,
   nip: dosen.nip,
   nama: dosen.nama,
-  email: dosen.email,
   status: 'aktif',
   bio: '',
   mata_kuliah: (dosen.mata_kuliah || []).map((mk) => ({
@@ -176,7 +175,7 @@ router.post('/', authMiddleware, adminMiddleware, async (req, res) => {
     if (error.code === 'P2002') {
       return res.status(409).json({
         success: false,
-        message: 'NIP atau email dosen sudah digunakan'
+        message: 'NIP dosen sudah digunakan'
       });
     }
     res.status(500).json({
@@ -191,7 +190,7 @@ router.put('/:id', authMiddleware, adminMiddleware, async (req, res) => {
   try {
     const { id } = req.params;
     const dosenId = parseInt(id as any, 10);
-    const { nip, nama, email, mata_kuliah } = req.body;
+    const { nip, nama, mata_kuliah } = req.body;
 
     const existing = await prisma.dosen.findUnique({
       where: { id: dosenId }
@@ -213,7 +212,6 @@ router.put('/:id', authMiddleware, adminMiddleware, async (req, res) => {
         data: {
           ...(nip && { nip: String(nip).trim() }),
           ...(nama && { nama: String(nama).trim() }),
-          ...(email && { email: String(email).trim() }),
         }
       });
 
