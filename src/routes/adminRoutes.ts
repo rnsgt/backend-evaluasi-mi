@@ -187,13 +187,33 @@ router.get('/laporan', async (req, res) => {
           total_jawaban: stats.count
         }));
 
-        const detailEvaluasi = evaluasiList.map(ev => ({
-          id: ev.id,
-          submitted_at: ev.submitted_at,
-          komentar: ev.komentar || '',
-          rata_rata: ev.evaluasi_detail.length > 0 ? Number((ev.evaluasi_detail.reduce((sum, d) => sum + d.nilai, 0) / ev.evaluasi_detail.length).toFixed(2)) : 0,
-          jumlah_jawaban: ev.evaluasi_detail.length
-        }));
+        const detailEvaluasi = evaluasiList.map(ev => {
+          const evKategoriStats: Record<string, { sum: number, count: number }> = {};
+          ev.evaluasi_detail.forEach(det => {
+            const kategori = pernyataanMap.get(det.pernyataan_dosen_id!);
+            if (kategori) {
+              if (!evKategoriStats[kategori]) evKategoriStats[kategori] = { sum: 0, count: 0 };
+              evKategoriStats[kategori].sum += det.nilai;
+              evKategoriStats[kategori].count += 1;
+            }
+          });
+
+          const evDetailKategori = Object.entries(evKategoriStats).map(([kat, stats]) => ({
+            kategori: kat,
+            rata_rata: Number((stats.sum / stats.count).toFixed(2)),
+            total_jawaban: stats.count
+          }));
+
+          return {
+            id: ev.id,
+            submitted_at: ev.submitted_at,
+            komentar: ev.komentar || '',
+            mata_kuliah: (ev as any).mata_kuliah?.nama || 'Umum',
+            rata_rata: ev.evaluasi_detail.length > 0 ? Number((ev.evaluasi_detail.reduce((sum, d) => sum + d.nilai, 0) / ev.evaluasi_detail.length).toFixed(2)) : 0,
+            jumlah_jawaban: ev.evaluasi_detail.length,
+            detail_kategori: evDetailKategori
+          };
+        });
 
         laporanDosen.push({
           id: dosen.id,
@@ -252,7 +272,32 @@ router.get('/laporan', async (req, res) => {
           total_jawaban: allNilai.length,
           komentar_list: evaluasiList.filter(ev => ev.komentar).map(ev => ({ komentar: ev.komentar, submitted_at: ev.submitted_at })),
           detail_kategori: Object.entries(kategoriStats).map(([kat, stats]) => ({ kategori: kat, rata_rata: Number((stats.sum / stats.count).toFixed(2)), total_jawaban: stats.count })),
-          detail_evaluasi: evaluasiList.map(ev => ({ id: ev.id, submitted_at: ev.submitted_at, komentar: ev.komentar || '', rata_rata: ev.evaluasi_detail.length > 0 ? Number((ev.evaluasi_detail.reduce((sum, d) => sum + d.nilai, 0) / ev.evaluasi_detail.length).toFixed(2)) : 0, jumlah_jawaban: ev.evaluasi_detail.length }))
+          detail_evaluasi: evaluasiList.map(ev => {
+            const evKategoriStats: Record<string, { sum: number, count: number }> = {};
+            ev.evaluasi_detail.forEach(det => {
+              const kategori = pernyataanFasMap.get(det.pernyataan_fasilitas_id!);
+              if (kategori) {
+                if (!evKategoriStats[kategori]) evKategoriStats[kategori] = { sum: 0, count: 0 };
+                evKategoriStats[kategori].sum += det.nilai;
+                evKategoriStats[kategori].count += 1;
+              }
+            });
+
+            const evDetailKategori = Object.entries(evKategoriStats).map(([kat, stats]) => ({
+              kategori: kat,
+              rata_rata: Number((stats.sum / stats.count).toFixed(2)),
+              total_jawaban: stats.count
+            }));
+
+            return {
+              id: ev.id,
+              submitted_at: ev.submitted_at,
+              komentar: ev.komentar || '',
+              rata_rata: ev.evaluasi_detail.length > 0 ? Number((ev.evaluasi_detail.reduce((sum, d) => sum + d.nilai, 0) / ev.evaluasi_detail.length).toFixed(2)) : 0,
+              jumlah_jawaban: ev.evaluasi_detail.length,
+              detail_kategori: evDetailKategori
+            };
+          })
         });
       }
     }
