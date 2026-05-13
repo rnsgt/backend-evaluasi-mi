@@ -70,7 +70,6 @@ async function main() {
       data: {
         nip: '197801012005011001',
         nama: 'Dr. Ir. Bambang Wijaya, M.Kom',
-        email: 'bambang.wijaya@university.ac.id',
       }
     });
     console.log('✅ Dosen created:', dosen.nama);

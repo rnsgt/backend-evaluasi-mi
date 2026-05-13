@@ -145,8 +145,6 @@ router.post('/dosen', authMiddleware, async (req, res) => {
           data: {
             kode: `UMUM-${dosen_id}`,
             nama: mata_kuliah_nama || 'Umum',
-            sks: 0,
-            semester: null,
             dosen_id,
           },
           select: { id: true, dosen_id: true, nama: true }

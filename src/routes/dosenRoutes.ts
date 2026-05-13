@@ -108,28 +108,25 @@ router.get('/:id', authMiddleware, async (req, res) => {
 // Create dosen (Admin only)
 router.post('/', authMiddleware, adminMiddleware, async (req, res) => {
   try {
-    const { nip, nama, email, mata_kuliah } = req.body;
+    const { nip, nama, mata_kuliah } = req.body;
 
-    if (!nip || !nama || !email) {
+    if (!nip || !nama) {
       return res.status(400).json({
         success: false,
-        message: 'NIP, nama, dan email wajib diisi'
+        message: 'NIP dan nama wajib diisi'
       });
     }
 
     const existing = await prisma.dosen.findFirst({
       where: {
-        OR: [
-          { nip: String(nip).trim() },
-          { email: String(email).trim() }
-        ]
+        nip: String(nip).trim()
       }
     });
 
     if (existing) {
       return res.status(409).json({
         success: false,
-        message: 'NIP atau email dosen sudah digunakan'
+        message: 'NIP dosen sudah digunakan'
       });
     }
 
@@ -140,7 +137,6 @@ router.post('/', authMiddleware, adminMiddleware, async (req, res) => {
         data: {
           nip: String(nip).trim(),
           nama: String(nama).trim(),
-          email: String(email).trim(),
         }
       });
 
