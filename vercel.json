@@ -1,0 +1,9 @@
+{
+  "buildCommand": "npm run build",
+  "installCommand": "npm ci --include=dev",
+  "outputDirectory": "dist",
+  "nodejs": "22.x",
+  "env": {
+    "NODE_ENV": "production"
+  }
+}
